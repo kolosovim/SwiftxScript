@@ -109,7 +109,7 @@ local function createBaseGui()
     -- Categories
     local Categories = Instance.new("Frame")
     Categories.Name = "Categories"
-    Categories.Size = UDim2.new(0, 200, 0, 30)
+    Categories.Size = UDim2.new(1, -20, 0, 30)
     Categories.Position = UDim2.new(0, 10, 0, 10)
     Categories.BackgroundTransparency = 1
     Categories.Parent = TabList
@@ -170,16 +170,38 @@ function UILibrary:Window(title)
     function window:Tab(name, iconId)
         local tab = {}
         
+        -- Create a container for tab buttons if it doesn't exist
+        if not gui.TabList:FindFirstChild("TabButtons") then
+            local tabButtons = Instance.new("Frame")
+            tabButtons.Name = "TabButtons"
+            tabButtons.Size = UDim2.new(1, -20, 1, -50)  -- Leave space for Categories label
+            tabButtons.Position = UDim2.new(0, 10, 0, 40)  -- Position below Categories label
+            tabButtons.BackgroundTransparency = 1
+            tabButtons.Parent = gui.TabList
+            
+            local UIListLayout = Instance.new("UIListLayout")
+            UIListLayout.Parent = tabButtons
+            UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+            UIListLayout.Padding = UDim.new(0, 5)  -- Add spacing between tabs
+            
+            -- Add auto-size functionality
+            local function updateCanvasSize()
+                local contentSize = UIListLayout.AbsoluteContentSize
+                tabButtons.CanvasSize = UDim2.new(0, 0, 0, contentSize.Y)
+            end
+            UIListLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(updateCanvasSize)
+        end
+        
         local tabButton = Instance.new("TextButton")
         tabButton.Name = name
-        tabButton.Size = UDim2.new(1, -20, 0, 40)
-        tabButton.Position = UDim2.new(0, 10, 0, 0)
+        tabButton.Size = UDim2.new(1, 0, 0, 40)
         tabButton.BackgroundColor3 = COLORS.Secondary
         tabButton.BackgroundTransparency = 1
         tabButton.BorderSizePixel = 0
         tabButton.Text = ""
         tabButton.AutoButtonColor = false
-        tabButton.Parent = gui.TabList
+        tabButton.Parent = gui.TabList.TabButtons
+        tabButton.LayoutOrder = #gui.TabList.TabButtons:GetChildren()
         
         local iconContainer = Instance.new("Frame")
         iconContainer.Size = UDim2.new(0, 30, 0, 30)
@@ -223,6 +245,11 @@ function UILibrary:Window(title)
         UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
         UIListLayout.Padding = UDim.new(0, 10)
         
+        -- Add auto-size functionality for content
+        UIListLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+            contentFrame.CanvasSize = UDim2.new(0, 0, 0, UIListLayout.AbsoluteContentSize.Y + 20)
+        end)
+        
         -- Selection effect
         local selectedFrame = Instance.new("Frame")
         selectedFrame.Size = UDim2.new(1, 0, 1, 0)
@@ -248,13 +275,17 @@ function UILibrary:Window(title)
             end
         end)
         
+        -- Improved tab switching logic
         tabButton.MouseButton1Click:Connect(function()
+            -- Hide all content frames
             for _, v in pairs(gui.ContentContainer:GetChildren()) do
                 if v:IsA("ScrollingFrame") then
                     v.Visible = false
                 end
             end
-            for _, v in pairs(gui.TabList:GetChildren()) do
+            
+            -- Reset all tab buttons
+            for _, v in pairs(gui.TabList.TabButtons:GetChildren()) do
                 if v:IsA("TextButton") then
                     local selFrame = v:FindFirstChild("Frame")
                     if selFrame then
@@ -262,15 +293,24 @@ function UILibrary:Window(title)
                             BackgroundTransparency = 1
                         }):Play()
                     end
+                    
                     local label = v:FindFirstChild("TextLabel")
                     if label then
                         TweenService:Create(label, TweenInfo.new(0.2), {
                             TextColor3 = COLORS.TextDark
                         }):Play()
                     end
+                    
+                    local icon = v:FindFirstChild("ImageLabel")
+                    if icon then
+                        TweenService:Create(icon, TweenInfo.new(0.2), {
+                            ImageColor3 = COLORS.TextDark
+                        }):Play()
+                    end
                 end
             end
             
+            -- Show selected content and update visuals
             contentFrame.Visible = true
             TweenService:Create(selectedFrame, TweenInfo.new(0.2), {
                 BackgroundTransparency = 0
@@ -278,6 +318,14 @@ function UILibrary:Window(title)
             TweenService:Create(tabLabel, TweenInfo.new(0.2), {
                 TextColor3 = COLORS.Text
             }):Play()
+            
+            -- Update icon color if it exists
+            local icon = iconContainer:FindFirstChild("ImageLabel")
+            if icon then
+                TweenService:Create(icon, TweenInfo.new(0.2), {
+                    ImageColor3 = COLORS.Text
+                }):Play()
+            end
         end)
         
         function tab:Button(text, callback)
