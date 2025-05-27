@@ -1,0 +1,343 @@
+local SwiftxUI = {}
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+local CoreGui = game:GetService("CoreGui")
+
+-- Константы для дизайна
+local COLORS = {
+    Background = Color3.fromRGB(25, 25, 25),
+    Accent = Color3.fromRGB(255, 0, 0),
+    Text = Color3.fromRGB(255, 255, 255),
+    Secondary = Color3.fromRGB(40, 40, 40),
+    Hover = Color3.fromRGB(60, 60, 60)
+}
+
+local FONT = Enum.Font.Gotham
+local TWEEN_TIME = 0.2
+
+-- Утилиты
+local function Create(class, properties)
+    local instance = Instance.new(class)
+    for property, value in pairs(properties) do
+        instance[property] = value
+    end
+    return instance
+end
+
+local function Tween(object, properties, time)
+    local tween = TweenService:Create(object, TweenInfo.new(time or TWEEN_TIME), properties)
+    tween:Play()
+    return tween
+end
+
+-- Основной класс окна
+function SwiftxUI.CreateWindow(config)
+    config = config or {}
+    local Window = {}
+    
+    -- Создаем основной GUI
+    local ScreenGui = Create("ScreenGui", {
+        Name = "SwiftxScript",
+        Parent = CoreGui,
+        ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    })
+    
+    local Main = Create("Frame", {
+        Name = "Main",
+        Parent = ScreenGui,
+        BackgroundColor3 = COLORS.Background,
+        BorderSizePixel = 0,
+        Position = UDim2.new(0.5, -300, 0.5, -200),
+        Size = UDim2.new(0, 600, 0, 400),
+        ClipsDescendants = true
+    })
+    
+    -- Делаем окно перетаскиваемым
+    local Dragging = false
+    local DragStart = nil
+    local StartPos = nil
+    
+    Main.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            Dragging = true
+            DragStart = input.Position
+            StartPos = Main.Position
+        end
+    end)
+    
+    UserInputService.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement and Dragging then
+            local delta = input.Position - DragStart
+            Main.Position = UDim2.new(
+                StartPos.X.Scale,
+                StartPos.X.Offset + delta.X,
+                StartPos.Y.Scale,
+                StartPos.Y.Offset + delta.Y
+            )
+        end
+    end)
+    
+    UserInputService.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            Dragging = false
+        end
+    end)
+    
+    -- Заголовок
+    local Title = Create("TextLabel", {
+        Name = "Title",
+        Parent = Main,
+        BackgroundTransparency = 1,
+        Position = UDim2.new(0, 10, 0, 5),
+        Size = UDim2.new(1, -20, 0, 30),
+        Font = FONT,
+        Text = config.Name or "SwiftxScript",
+        TextColor3 = COLORS.Text,
+        TextSize = 18,
+        TextXAlignment = Enum.TextXAlignment.Left
+    })
+    
+    -- Контейнер для вкладок
+    local TabContainer = Create("Frame", {
+        Name = "TabContainer",
+        Parent = Main,
+        BackgroundColor3 = COLORS.Secondary,
+        BorderSizePixel = 0,
+        Position = UDim2.new(0, 10, 0, 40),
+        Size = UDim2.new(0, 150, 1, -50)
+    })
+    
+    -- Контейнер для содержимого
+    local ContentContainer = Create("Frame", {
+        Name = "ContentContainer",
+        Parent = Main,
+        BackgroundColor3 = COLORS.Secondary,
+        BorderSizePixel = 0,
+        Position = UDim2.new(0, 170, 0, 40),
+        Size = UDim2.new(1, -180, 1, -50)
+    })
+    
+    -- Методы окна
+    function Window:CreateTab(name)
+        local Tab = {}
+        
+        -- Кнопка вкладки
+        local TabButton = Create("TextButton", {
+            Name = name,
+            Parent = TabContainer,
+            BackgroundColor3 = COLORS.Secondary,
+            BorderSizePixel = 0,
+            Size = UDim2.new(1, 0, 0, 35),
+            Font = FONT,
+            Text = name,
+            TextColor3 = COLORS.Text,
+            TextSize = 14,
+            AutoButtonColor = false
+        })
+        
+        -- Контейнер содержимого вкладки
+        local TabContent = Create("ScrollingFrame", {
+            Name = name .. "Content",
+            Parent = ContentContainer,
+            BackgroundTransparency = 1,
+            BorderSizePixel = 0,
+            Size = UDim2.new(1, 0, 1, 0),
+            ScrollBarThickness = 4,
+            Visible = false,
+            AutomaticCanvasSize = Enum.AutomaticSize.Y,
+            CanvasSize = UDim2.new(0, 0, 0, 0)
+        })
+        
+        -- События наведения
+        TabButton.MouseEnter:Connect(function()
+            if TabButton.BackgroundColor3 ~= COLORS.Accent then
+                Tween(TabButton, {BackgroundColor3 = COLORS.Hover})
+            end
+        end)
+        
+        TabButton.MouseLeave:Connect(function()
+            if TabButton.BackgroundColor3 ~= COLORS.Accent then
+                Tween(TabButton, {BackgroundColor3 = COLORS.Secondary})
+            end
+        end)
+        
+        -- Переключение вкладок
+        TabButton.MouseButton1Click:Connect(function()
+            for _, button in pairs(TabContainer:GetChildren()) do
+                if button:IsA("TextButton") then
+                    Tween(button, {BackgroundColor3 = COLORS.Secondary})
+                end
+            end
+            
+            for _, content in pairs(ContentContainer:GetChildren()) do
+                content.Visible = false
+            end
+            
+            Tween(TabButton, {BackgroundColor3 = COLORS.Accent})
+            TabContent.Visible = true
+        end)
+        
+        -- Методы вкладки
+        function Tab:CreateToggle(config)
+            local ToggleFrame = Create("Frame", {
+                Name = config.Name .. "Toggle",
+                Parent = TabContent,
+                BackgroundColor3 = COLORS.Secondary,
+                BorderSizePixel = 0,
+                Size = UDim2.new(1, -20, 0, 35),
+                Position = UDim2.new(0, 10, 0, #TabContent:GetChildren() * 45)
+            })
+            
+            local ToggleButton = Create("TextButton", {
+                Name = "Button",
+                Parent = ToggleFrame,
+                BackgroundColor3 = COLORS.Background,
+                BorderSizePixel = 0,
+                Position = UDim2.new(1, -45, 0.5, -10),
+                Size = UDim2.new(0, 35, 0, 20),
+                Text = "",
+                AutoButtonColor = false
+            })
+            
+            local ToggleText = Create("TextLabel", {
+                Name = "Text",
+                Parent = ToggleFrame,
+                BackgroundTransparency = 1,
+                Position = UDim2.new(0, 10, 0, 0),
+                Size = UDim2.new(1, -65, 1, 0),
+                Font = FONT,
+                Text = config.Name,
+                TextColor3 = COLORS.Text,
+                TextSize = 14,
+                TextXAlignment = Enum.TextXAlignment.Left
+            })
+            
+            local Enabled = config.Default or false
+            
+            local function UpdateToggle()
+                Tween(ToggleButton, {BackgroundColor3 = Enabled and COLORS.Accent or COLORS.Background})
+                if config.Callback then
+                    config.Callback(Enabled)
+                end
+            end
+            
+            ToggleButton.MouseButton1Click:Connect(function()
+                Enabled = not Enabled
+                UpdateToggle()
+            end)
+            
+            UpdateToggle()
+        end
+        
+        function Tab:CreateButton(config)
+            local Button = Create("TextButton", {
+                Name = config.Name .. "Button",
+                Parent = TabContent,
+                BackgroundColor3 = COLORS.Secondary,
+                BorderSizePixel = 0,
+                Size = UDim2.new(1, -20, 0, 35),
+                Position = UDim2.new(0, 10, 0, #TabContent:GetChildren() * 45),
+                Font = FONT,
+                Text = config.Name,
+                TextColor3 = COLORS.Text,
+                TextSize = 14,
+                AutoButtonColor = false
+            })
+            
+            Button.MouseEnter:Connect(function()
+                Tween(Button, {BackgroundColor3 = COLORS.Hover})
+            end)
+            
+            Button.MouseLeave:Connect(function()
+                Tween(Button, {BackgroundColor3 = COLORS.Secondary})
+            end)
+            
+            Button.MouseButton1Click:Connect(function()
+                if config.Callback then
+                    config.Callback()
+                end
+            end)
+        end
+        
+        function Tab:CreateSlider(config)
+            local SliderFrame = Create("Frame", {
+                Name = config.Name .. "Slider",
+                Parent = TabContent,
+                BackgroundColor3 = COLORS.Secondary,
+                BorderSizePixel = 0,
+                Size = UDim2.new(1, -20, 0, 50),
+                Position = UDim2.new(0, 10, 0, #TabContent:GetChildren() * 45)
+            })
+            
+            local SliderText = Create("TextLabel", {
+                Name = "Text",
+                Parent = SliderFrame,
+                BackgroundTransparency = 1,
+                Position = UDim2.new(0, 10, 0, 0),
+                Size = UDim2.new(1, -20, 0, 25),
+                Font = FONT,
+                Text = config.Name,
+                TextColor3 = COLORS.Text,
+                TextSize = 14,
+                TextXAlignment = Enum.TextXAlignment.Left
+            })
+            
+            local SliderBar = Create("Frame", {
+                Name = "Bar",
+                Parent = SliderFrame,
+                BackgroundColor3 = COLORS.Background,
+                BorderSizePixel = 0,
+                Position = UDim2.new(0, 10, 0, 30),
+                Size = UDim2.new(1, -20, 0, 5)
+            })
+            
+            local SliderFill = Create("Frame", {
+                Name = "Fill",
+                Parent = SliderBar,
+                BackgroundColor3 = COLORS.Accent,
+                BorderSizePixel = 0,
+                Size = UDim2.new(0, 0, 1, 0)
+            })
+            
+            local Min = config.Min or 0
+            local Max = config.Max or 100
+            local Value = config.Default or Min
+            
+            local function UpdateSlider()
+                local Percent = (Value - Min) / (Max - Min)
+                Tween(SliderFill, {Size = UDim2.new(Percent, 0, 1, 0)})
+                SliderText.Text = config.Name .. ": " .. Value
+                if config.Callback then
+                    config.Callback(Value)
+                end
+            end
+            
+            SliderBar.InputBegan:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                    local Connection
+                    Connection = UserInputService.InputChanged:Connect(function(input)
+                        if input.UserInputType == Enum.UserInputType.MouseMovement then
+                            local Percent = math.clamp((input.Position.X - SliderBar.AbsolutePosition.X) / SliderBar.AbsoluteSize.X, 0, 1)
+                            Value = math.floor(Min + (Max - Min) * Percent)
+                            UpdateSlider()
+                        end
+                    end)
+                    
+                    UserInputService.InputEnded:Connect(function(input)
+                        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                            Connection:Disconnect()
+                        end
+                    end)
+                end
+            end)
+            
+            UpdateSlider()
+        end
+        
+        return Tab
+    end
+    
+    return Window
+end
+
+return SwiftxUI
