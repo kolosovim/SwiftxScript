@@ -2,34 +2,75 @@ local UILibrary = {}
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 
--- Constants for UI styling
+-- Constants for UI styling (Neverlose.cc inspired theme)
 local COLORS = {
-    Background = Color3.fromRGB(30, 30, 30),
-    Accent = Color3.fromRGB(50, 50, 50),
+    Background = Color3.fromRGB(17, 17, 17), -- Darker background
+    Secondary = Color3.fromRGB(25, 25, 25), -- Secondary background
+    Accent = Color3.fromRGB(41, 74, 122), -- Blue accent
+    AccentHover = Color3.fromRGB(51, 91, 150), -- Lighter blue for hover
     Text = Color3.fromRGB(255, 255, 255),
-    Border = Color3.fromRGB(60, 60, 60),
-    Highlight = Color3.fromRGB(70, 70, 70)
+    TextDark = Color3.fromRGB(180, 180, 180),
+    Border = Color3.fromRGB(30, 30, 30),
+    Highlight = Color3.fromRGB(65, 105, 225), -- Royal blue highlight
+    Error = Color3.fromRGB(255, 71, 71),
+    Success = Color3.fromRGB(97, 255, 97)
 }
+
+local function createCorner(instance, radius)
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, radius or 4)
+    corner.Parent = instance
+    return corner
+end
+
+local function createStroke(instance, color, thickness)
+    local stroke = Instance.new("UIStroke")
+    stroke.Color = color or COLORS.Border
+    stroke.Thickness = thickness or 1
+    stroke.Parent = instance
+    return stroke
+end
+
+local function createGradient(instance, colorSequence)
+    local gradient = Instance.new("UIGradient")
+    gradient.Color = colorSequence or ColorSequence.new({
+        ColorSequenceKeypoint.new(0, COLORS.Accent),
+        ColorSequenceKeypoint.new(1, COLORS.AccentHover)
+    })
+    gradient.Parent = instance
+    return gradient
+end
 
 local function createBaseGui()
     local ScreenGui = Instance.new("ScreenGui")
-    ScreenGui.Name = "UILibrary"
+    ScreenGui.Name = "NeverloseUI"
     ScreenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
     
     local MainFrame = Instance.new("Frame")
     MainFrame.Name = "MainFrame"
-    MainFrame.Size = UDim2.new(0, 600, 0, 400)
-    MainFrame.Position = UDim2.new(0.5, -300, 0.5, -200)
+    MainFrame.Size = UDim2.new(0, 650, 0, 450)
+    MainFrame.Position = UDim2.new(0.5, -325, 0.5, -225)
     MainFrame.BackgroundColor3 = COLORS.Background
     MainFrame.BorderSizePixel = 0
+    createCorner(MainFrame, 6)
+    createStroke(MainFrame, COLORS.Border, 1)
     MainFrame.Parent = ScreenGui
+    
+    -- Top bar with title
+    local TopBar = Instance.new("Frame")
+    TopBar.Name = "TopBar"
+    TopBar.Size = UDim2.new(1, 0, 0, 40)
+    TopBar.BackgroundColor3 = COLORS.Secondary
+    TopBar.BorderSizePixel = 0
+    createCorner(TopBar, 6)
+    TopBar.Parent = MainFrame
     
     -- Make the window draggable
     local dragging = false
     local dragStart = nil
     local startPos = nil
     
-    MainFrame.InputBegan:Connect(function(input)
+    TopBar.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
             dragging = true
             dragStart = input.Position
@@ -57,8 +98,9 @@ local function createBaseGui()
     
     local TabContainer = Instance.new("Frame")
     TabContainer.Name = "TabContainer"
-    TabContainer.Size = UDim2.new(0, 150, 1, 0)
-    TabContainer.BackgroundColor3 = COLORS.Accent
+    TabContainer.Size = UDim2.new(0, 170, 1, -40)
+    TabContainer.Position = UDim2.new(0, 0, 0, 40)
+    TabContainer.BackgroundColor3 = COLORS.Secondary
     TabContainer.BorderSizePixel = 0
     TabContainer.Parent = MainFrame
     
@@ -66,7 +108,8 @@ local function createBaseGui()
     TabList.Name = "TabList"
     TabList.Size = UDim2.new(1, 0, 1, 0)
     TabList.BackgroundTransparency = 1
-    TabList.ScrollBarThickness = 0
+    TabList.ScrollBarThickness = 2
+    TabList.ScrollBarImageColor3 = COLORS.Accent
     TabList.Parent = TabContainer
     
     local UIListLayout = Instance.new("UIListLayout")
@@ -76,14 +119,15 @@ local function createBaseGui()
     
     local ContentContainer = Instance.new("Frame")
     ContentContainer.Name = "ContentContainer"
-    ContentContainer.Size = UDim2.new(1, -150, 1, 0)
-    ContentContainer.Position = UDim2.new(0, 150, 0, 0)
+    ContentContainer.Size = UDim2.new(1, -180, 1, -50)
+    ContentContainer.Position = UDim2.new(0, 175, 0, 45)
     ContentContainer.BackgroundTransparency = 1
     ContentContainer.Parent = MainFrame
     
     return {
         ScreenGui = ScreenGui,
         MainFrame = MainFrame,
+        TopBar = TopBar,
         TabList = TabList,
         ContentContainer = ContentContainer
     }
@@ -108,26 +152,44 @@ function UILibrary:Window(title)
         
         local tabButton = Instance.new("TextButton")
         tabButton.Name = name
-        tabButton.Size = UDim2.new(1, -10, 0, 30)
-        tabButton.Position = UDim2.new(0, 5, 0, 0)
-        tabButton.BackgroundColor3 = COLORS.Accent
+        tabButton.Size = UDim2.new(1, -20, 0, 36)
+        tabButton.Position = UDim2.new(0, 10, 0, 0)
+        tabButton.BackgroundColor3 = COLORS.Secondary
         tabButton.BorderSizePixel = 0
         tabButton.Text = name
-        tabButton.TextColor3 = COLORS.Text
+        tabButton.TextColor3 = COLORS.TextDark
         tabButton.TextSize = 14
-        tabButton.Font = Enum.Font.SourceSans
+        tabButton.Font = Enum.Font.GothamBold
+        createCorner(tabButton, 4)
         tabButton.Parent = gui.TabList
+        
+        -- Add hover effect
+        tabButton.MouseEnter:Connect(function()
+            TweenService:Create(tabButton, TweenInfo.new(0.2), {
+                BackgroundColor3 = COLORS.Accent,
+                TextColor3 = COLORS.Text
+            }):Play()
+        end)
+        
+        tabButton.MouseLeave:Connect(function()
+            if contentFrame.Visible then return end
+            TweenService:Create(tabButton, TweenInfo.new(0.2), {
+                BackgroundColor3 = COLORS.Secondary,
+                TextColor3 = COLORS.TextDark
+            }):Play()
+        end)
         
         if iconId then
             local icon = Instance.new("ImageLabel")
             icon.Size = UDim2.new(0, 20, 0, 20)
-            icon.Position = UDim2.new(0, 5, 0.5, -10)
+            icon.Position = UDim2.new(0, 8, 0.5, -10)
             icon.BackgroundTransparency = 1
             icon.Image = iconId
+            icon.ImageColor3 = COLORS.TextDark
             icon.Parent = tabButton
             
             tabButton.TextXAlignment = Enum.TextXAlignment.Right
-            tabButton.Text = "  " .. name
+            tabButton.Text = "  " .. name .. "  "
         end
         
         local contentFrame = Instance.new("ScrollingFrame")
@@ -154,15 +216,30 @@ function UILibrary:Window(title)
         
         function tab:Button(text, callback)
             local button = Instance.new("TextButton")
-            button.Size = UDim2.new(1, -10, 0, 30)
-            button.Position = UDim2.new(0, 5, 0, 0)
-            button.BackgroundColor3 = COLORS.Accent
+            button.Size = UDim2.new(1, -20, 0, 36)
+            button.Position = UDim2.new(0, 10, 0, 0)
+            button.BackgroundColor3 = COLORS.Secondary
             button.BorderSizePixel = 0
             button.Text = text
             button.TextColor3 = COLORS.Text
             button.TextSize = 14
-            button.Font = Enum.Font.SourceSans
+            button.Font = Enum.Font.GothamBold
+            createCorner(button, 4)
+            createGradient(button)
             button.Parent = contentFrame
+            
+            -- Add hover effect
+            button.MouseEnter:Connect(function()
+                TweenService:Create(button, TweenInfo.new(0.2), {
+                    BackgroundColor3 = COLORS.AccentHover
+                }):Play()
+            end)
+            
+            button.MouseLeave:Connect(function()
+                TweenService:Create(button, TweenInfo.new(0.2), {
+                    BackgroundColor3 = COLORS.Secondary
+                }):Play()
+            end)
             
             button.MouseButton1Click:Connect(callback)
         end
