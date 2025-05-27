@@ -1,0 +1,192 @@
+-- Основные функции для SwiftxScript
+
+local Functions = {}
+
+-- Основные переменные
+local player = game.Players.LocalPlayer
+
+-- Анти-АФК система
+Functions.EnableAntiAFK = function()
+    local antiAFK = true
+    player.Idled:connect(function()
+        while wait(5) do
+            if antiAFK then
+                game.VirtualUser:Button2Down(Vector2.new(0, 0), workspace.CurrentCamera.CFrame)
+                wait(1)
+                game.VirtualUser:Button2Up(Vector2.new(0, 0), workspace.CurrentCamera.CFrame)
+            end
+        end
+    end)
+end
+
+-- Получить время в игре
+Functions.GetGameTime = function()
+    local GameTime = math.floor(workspace.DistributedGameTime+0.5)
+    local Hour = math.floor(GameTime/(60^2))%24
+    local Minute = math.floor(GameTime/(60^1))%60
+    local Second = math.floor(GameTime/(60^0))%60
+    return Hour, Minute, Second
+end
+
+-- Получить FPS
+Functions.GetFPS = function()
+    return workspace:GetRealPhysicsFPS()
+end
+
+-- Получить пинг
+Functions.GetPing = function()
+    return game:GetService("Stats").Network.ServerStatsItem["Data Ping"]:GetValueString()
+end
+
+-- Собрать все сундуки
+Functions.CollectAllChests = function()
+    local oldPositions = {
+        golden = workspace.goldenChest.circleInner.CFrame,
+        enchanted = workspace.enchantedChest.circleInner.CFrame,
+        magma = workspace.magmaChest.circleInner.CFrame,
+        group = workspace.groupRewardsCircle.circleInner.CFrame
+    }
+    
+    workspace.goldenChest.circleInner.CFrame = player.Character.HumanoidRootPart.CFrame
+    workspace.enchantedChest.circleInner.CFrame = player.Character.HumanoidRootPart.CFrame
+    workspace.magmaChest.circleInner.CFrame = player.Character.HumanoidRootPart.CFrame
+    workspace.groupRewardsCircle.circleInner.CFrame = player.Character.HumanoidRootPart.CFrame
+    wait()
+    
+    workspace.goldenChest.circleInner.CFrame = oldPositions.golden
+    workspace.enchantedChest.circleInner.CFrame = oldPositions.enchanted
+    workspace.magmaChest.circleInner.CFrame = oldPositions.magma
+    workspace.groupRewardsCircle.circleInner.CFrame = oldPositions.group
+end
+
+-- Авто-возрождение
+Functions.AutoRebirth = function(enabled)
+    spawn(function()
+        while enabled do
+            wait()
+            game.ReplicatedStorage.rEvents.rebirthEvent:FireServer("rebirthRequest")
+        end
+    end)
+end
+
+-- NoClip функция
+Functions.EnableNoClip = function(enabled)
+    spawn(function()
+        game:GetService("RunService").Stepped:Connect(function()
+            if enabled then
+                for _, v in pairs(player.Character:GetDescendants()) do
+                    if v:IsA("BasePart") then
+                        v.CanCollide = false    
+                    end
+                end
+            end
+        end)
+    end)
+end
+
+-- Управление обменом
+Functions.DisableTrading = function()
+    game:GetService("ReplicatedStorage").rEvents.tradingEvent:FireServer("disableTrading")
+end
+
+Functions.EnableTrading = function()
+    game:GetService("ReplicatedStorage").rEvents.tradingEvent:FireServer("enableTrading")
+end
+
+-- Телепорт к игроку
+Functions.TeleportToPlayer = function(targetPlayer)
+    player.Character.HumanoidRootPart.CFrame = game.Players[targetPlayer].Character.HumanoidRootPart.CFrame * CFrame.new(0,2,1)
+end
+
+-- Изменение характеристик
+Functions.SetWalkSpeed = function(speed)
+    player.Character.Humanoid.WalkSpeed = speed
+end
+
+Functions.SetJumpPower = function(power)
+    player.Character.Humanoid.JumpPower = power
+end
+
+-- Авто-фарм функции
+Functions.StartOrbFarm = function(orbType, location, speed)
+    spawn(function()
+        while wait() do
+            for i=1, speed do
+                game:GetService("ReplicatedStorage").rEvents.orbEvent:FireServer("collectOrb", orbType, location)
+            end
+        end
+    end)
+end
+
+Functions.StartHoopFarm = function(enabled)
+    spawn(function()
+        while enabled do
+            wait()
+            local children = workspace.Hoops:GetChildren()
+            for _, child in ipairs(children) do
+                if child.Name == 'Hoop' then
+                    child.Transparency = 1
+                    child.CFrame = player.Character.HumanoidRootPart.CFrame
+                end
+            end
+        end
+    end)
+end
+
+-- Авто-гонка
+Functions.SetupAutoRace = function()
+    game.ReplicatedStorage.raceInProgress.Changed:Connect(function(state)
+        if not getgenv().AutoRace then return end
+        if state then
+            game.ReplicatedStorage.rEvents.raceEvent:FireServer('joinRace')
+            wait()
+            player.PlayerGui.gameGui.raceJoinLabel.Visible = false
+        end
+    end)
+
+    game.ReplicatedStorage.raceStarted.Changed:Connect(function(state)
+        if not getgenv().AutoRace then return end
+        if state then
+            for _, v in pairs(workspace.raceMaps:GetChildren()) do
+                local oldFinishPosition = v.finishPart.CFrame
+                v.finishPart.CFrame = player.Character.HumanoidRootPart.CFrame
+                wait()
+                v.finishPart.CFrame = oldFinishPosition
+            end
+        end
+    end)
+end
+
+-- Телепорты между локациями
+Functions.Teleports = {
+    City = Vector3.new(-9687.1923828125, 59.072853088378906, 3096.58837890625),
+    SnowCity = Vector3.new(-9677.6640625, 59.072853088378906, 3783.736572265625),
+    MagmaCity = Vector3.new(-11053.3837890625, 217.0328369140625, 4896.10986328125),
+    LegendsHighway = Vector3.new(-13097.8583984375, 217.0328369140625, 5904.84716796875)
+}
+
+Functions.TeleportToLocation = function(location)
+    if Functions.Teleports[location] then
+        player.Character:MoveTo(Functions.Teleports[location])
+    end
+end
+
+Functions.TeleportToWorld = function(worldId)
+    local ts = game:GetService("TeleportService")
+    ts:Teleport(worldId, player)
+end
+
+-- Управление уведомлениями
+Functions.TogglePopups = function(enabled)
+    player.PlayerGui.orbGui.Enabled = enabled
+    player.PlayerGui.gameGui.trailsNotificationsFrame.Visible = enabled
+end
+
+-- Бесконечный прыжок
+Functions.EnableInfiniteJump = function()
+    game:GetService("UserInputService").JumpRequest:connect(function()
+        player.Character:FindFirstChildOfClass'Humanoid':ChangeState("Jumping")
+    end)
+end
+
+return Functions 
