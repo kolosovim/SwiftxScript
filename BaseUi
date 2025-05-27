@@ -1,6 +1,10 @@
 local UILibrary = {}
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+
+-- Add global toggle state
+local isGuiVisible = true
 
 -- Constants for UI styling (Neverlose theme)
 local COLORS = {
@@ -49,6 +53,9 @@ local function createBaseGui()
     local ScreenGui = Instance.new("ScreenGui")
     ScreenGui.Name = "NeverloseUI"
     ScreenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
+    
+    -- Add ZIndexBehavior to ensure proper layering
+    ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     
     local MainFrame = Instance.new("Frame")
     MainFrame.Name = "MainFrame"
@@ -126,6 +133,14 @@ local function createBaseGui()
     createCorner(ContentContainer, 8)
     ContentContainer.Parent = MainFrame
     
+    -- Add toggle functionality
+    UserInputService.InputBegan:Connect(function(input, gameProcessed)
+        if not gameProcessed and input.KeyCode == Enum.KeyCode.LeftControl then
+            isGuiVisible = not isGuiVisible
+            MainFrame.Visible = isGuiVisible
+        end
+    end)
+    
     return {
         ScreenGui = ScreenGui,
         MainFrame = MainFrame,
@@ -138,6 +153,19 @@ end
 function UILibrary:Window(title)
     local window = {}
     local gui = createBaseGui()
+    
+    -- Update window title
+    local Title = Instance.new("TextLabel")
+    Title.Name = "Title"
+    Title.Size = UDim2.new(0, 200, 1, 0)
+    Title.Position = UDim2.new(0, 20, 0, 0)
+    Title.BackgroundTransparency = 1
+    Title.Text = title
+    Title.TextColor3 = COLORS.Text
+    Title.TextSize = 22
+    Title.Font = Enum.Font.GothamBold
+    Title.TextXAlignment = Enum.TextXAlignment.Left
+    Title.Parent = gui.TopBar
     
     function window:Tab(name, iconId)
         local tab = {}
@@ -596,7 +624,25 @@ function UILibrary:Window(title)
         return tab
     end
     
+    -- Add anti-AFK functionality
+    local antiAFK = true
+    local player = game.Players.LocalPlayer
+    player.Idled:Connect(function()
+        while wait(5) do
+            if antiAFK then
+                game.VirtualUser:Button2Down(Vector2.new(0, 0), workspace.CurrentCamera.CFrame)
+                wait(1)
+                game.VirtualUser:Button2Up(Vector2.new(0, 0), workspace.CurrentCamera.CFrame)
+            end
+        end
+    end)
+    
     return window
+end
+
+-- Add update functionality for web loading
+function UILibrary:Update()
+    return self
 end
 
 return UILibrary 
