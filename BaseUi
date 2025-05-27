@@ -3,13 +3,16 @@ local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local CoreGui = game:GetService("CoreGui")
 
--- Константы для дизайна
+-- Константы для дизайна в стиле Neverlose
 local COLORS = {
-    Background = Color3.fromRGB(25, 25, 25),
-    Accent = Color3.fromRGB(255, 0, 0),
-    Text = Color3.fromRGB(255, 255, 255),
-    Secondary = Color3.fromRGB(40, 40, 40),
-    Hover = Color3.fromRGB(60, 60, 60)
+    Background = Color3.fromRGB(17, 17, 17), -- Темный фон
+    Primary = Color3.fromRGB(23, 23, 23), -- Основной цвет элементов
+    Secondary = Color3.fromRGB(30, 30, 30), -- Вторичный цвет
+    Accent = Color3.fromRGB(0, 144, 255), -- Синий акцент
+    Text = Color3.fromRGB(255, 255, 255), -- Белый текст
+    SubText = Color3.fromRGB(180, 180, 180), -- Серый текст
+    Border = Color3.fromRGB(40, 40, 40), -- Цвет границ
+    Hover = Color3.fromRGB(45, 45, 45) -- Цвет при наведении
 }
 
 local FONT = Enum.Font.Gotham
@@ -37,19 +40,103 @@ function SwiftxUI.CreateWindow(config)
     
     -- Создаем основной GUI
     local ScreenGui = Create("ScreenGui", {
-        Name = "SwiftxScript",
+        Name = "NEVERLOSE",
         Parent = CoreGui,
         ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     })
     
+    -- Создаем главное окно
     local Main = Create("Frame", {
         Name = "Main",
         Parent = ScreenGui,
         BackgroundColor3 = COLORS.Background,
         BorderSizePixel = 0,
-        Position = UDim2.new(0.5, -300, 0.5, -200),
-        Size = UDim2.new(0, 600, 0, 400),
+        Position = UDim2.new(0.5, -400, 0.5, -250),
+        Size = UDim2.new(0, 800, 0, 500),
         ClipsDescendants = true
+    })
+    
+    -- Добавляем закругленные углы
+    local UICorner = Create("UICorner", {
+        Parent = Main,
+        CornerRadius = UDim.new(0, 8)
+    })
+    
+    -- Верхняя панель
+    local TopBar = Create("Frame", {
+        Name = "TopBar",
+        Parent = Main,
+        BackgroundColor3 = COLORS.Primary,
+        BorderSizePixel = 0,
+        Size = UDim2.new(1, 0, 0, 40)
+    })
+    
+    Create("UICorner", {
+        Parent = TopBar,
+        CornerRadius = UDim.new(0, 8)
+    })
+    
+    -- Логотип
+    local Logo = Create("TextLabel", {
+        Name = "Logo",
+        Parent = TopBar,
+        BackgroundTransparency = 1,
+        Position = UDim2.new(0, 15, 0, 0),
+        Size = UDim2.new(0, 120, 1, 0),
+        Font = Enum.Font.GothamBold,
+        Text = "NEVERLOSE",
+        TextColor3 = COLORS.Text,
+        TextSize = 16,
+        TextXAlignment = Enum.TextXAlignment.Left
+    })
+    
+    -- Кнопка сохранения
+    local SaveButton = Create("TextButton", {
+        Name = "SaveButton",
+        Parent = TopBar,
+        BackgroundColor3 = COLORS.Accent,
+        Position = UDim2.new(0, 140, 0.5, -15),
+        Size = UDim2.new(0, 70, 0, 30),
+        Font = FONT,
+        Text = "Save",
+        TextColor3 = COLORS.Text,
+        TextSize = 14,
+        AutoButtonColor = false
+    })
+    
+    Create("UICorner", {
+        Parent = SaveButton,
+        CornerRadius = UDim.new(0, 6)
+    })
+    
+    -- Левая панель с вкладками
+    local TabContainer = Create("Frame", {
+        Name = "TabContainer",
+        Parent = Main,
+        BackgroundColor3 = COLORS.Primary,
+        BorderSizePixel = 0,
+        Position = UDim2.new(0, 10, 0, 50),
+        Size = UDim2.new(0, 180, 1, -60)
+    })
+    
+    Create("UICorner", {
+        Parent = TabContainer,
+        CornerRadius = UDim.new(0, 8)
+    })
+    
+    -- Контейнер для содержимого
+    local ContentContainer = Create("Frame", {
+        Name = "ContentContainer",
+        Parent = Main,
+        BackgroundColor3 = COLORS.Primary,
+        BorderSizePixel = 0,
+        Position = UDim2.new(0, 200, 0, 50),
+        Size = UDim2.new(1, -210, 1, -60)
+    })
+    
+    Create("UICorner", {
+        Parent = ContentContainer,
+        CornerRadius = UDim.new(0, 8)
     })
     
     -- Делаем окно перетаскиваемым
@@ -57,7 +144,7 @@ function SwiftxUI.CreateWindow(config)
     local DragStart = nil
     local StartPos = nil
     
-    Main.InputBegan:Connect(function(input)
+    TopBar.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
             Dragging = true
             DragStart = input.Position
@@ -83,56 +170,36 @@ function SwiftxUI.CreateWindow(config)
         end
     end)
     
-    -- Заголовок
-    local Title = Create("TextLabel", {
-        Name = "Title",
-        Parent = Main,
-        BackgroundTransparency = 1,
-        Position = UDim2.new(0, 10, 0, 5),
-        Size = UDim2.new(1, -20, 0, 30),
-        Font = FONT,
-        Text = config.Name or "SwiftxScript",
-        TextColor3 = COLORS.Text,
-        TextSize = 18,
-        TextXAlignment = Enum.TextXAlignment.Left
-    })
-    
-    -- Контейнер для вкладок
-    local TabContainer = Create("Frame", {
-        Name = "TabContainer",
-        Parent = Main,
-        BackgroundColor3 = COLORS.Secondary,
-        BorderSizePixel = 0,
-        Position = UDim2.new(0, 10, 0, 40),
-        Size = UDim2.new(0, 150, 1, -50)
-    })
-    
-    -- Контейнер для содержимого
-    local ContentContainer = Create("Frame", {
-        Name = "ContentContainer",
-        Parent = Main,
-        BackgroundColor3 = COLORS.Secondary,
-        BorderSizePixel = 0,
-        Position = UDim2.new(0, 170, 0, 40),
-        Size = UDim2.new(1, -180, 1, -50)
-    })
-    
     -- Методы окна
-    function Window:CreateTab(name)
+    function Window:CreateTab(name, icon)
         local Tab = {}
+        local tabCount = #TabContainer:GetChildren() - 1
         
         -- Кнопка вкладки
         local TabButton = Create("TextButton", {
             Name = name,
             Parent = TabContainer,
-            BackgroundColor3 = COLORS.Secondary,
+            BackgroundColor3 = COLORS.Primary,
             BorderSizePixel = 0,
-            Size = UDim2.new(1, 0, 0, 35),
+            Position = UDim2.new(0, 0, 0, tabCount * 40),
+            Size = UDim2.new(1, 0, 0, 40),
             Font = FONT,
-            Text = name,
+            Text = "  " .. name,
             TextColor3 = COLORS.Text,
             TextSize = 14,
+            TextXAlignment = Enum.TextXAlignment.Left,
             AutoButtonColor = false
+        })
+        
+        -- Индикатор выбранной вкладки
+        local TabIndicator = Create("Frame", {
+            Name = "Indicator",
+            Parent = TabButton,
+            BackgroundColor3 = COLORS.Accent,
+            BorderSizePixel = 0,
+            Position = UDim2.new(0, 0, 0, 0),
+            Size = UDim2.new(0, 2, 1, 0),
+            Visible = false
         })
         
         -- Контейнер содержимого вкладки
@@ -141,8 +208,10 @@ function SwiftxUI.CreateWindow(config)
             Parent = ContentContainer,
             BackgroundTransparency = 1,
             BorderSizePixel = 0,
-            Size = UDim2.new(1, 0, 1, 0),
-            ScrollBarThickness = 4,
+            Position = UDim2.new(0, 10, 0, 10),
+            Size = UDim2.new(1, -20, 1, -20),
+            ScrollBarThickness = 2,
+            ScrollBarImageColor3 = COLORS.Accent,
             Visible = false,
             AutomaticCanvasSize = Enum.AutomaticSize.Y,
             CanvasSize = UDim2.new(0, 0, 0, 0)
@@ -150,14 +219,14 @@ function SwiftxUI.CreateWindow(config)
         
         -- События наведения
         TabButton.MouseEnter:Connect(function()
-            if TabButton.BackgroundColor3 ~= COLORS.Accent then
+            if not TabIndicator.Visible then
                 Tween(TabButton, {BackgroundColor3 = COLORS.Hover})
             end
         end)
         
         TabButton.MouseLeave:Connect(function()
-            if TabButton.BackgroundColor3 ~= COLORS.Accent then
-                Tween(TabButton, {BackgroundColor3 = COLORS.Secondary})
+            if not TabIndicator.Visible then
+                Tween(TabButton, {BackgroundColor3 = COLORS.Primary})
             end
         end)
         
@@ -165,27 +234,72 @@ function SwiftxUI.CreateWindow(config)
         TabButton.MouseButton1Click:Connect(function()
             for _, button in pairs(TabContainer:GetChildren()) do
                 if button:IsA("TextButton") then
-                    Tween(button, {BackgroundColor3 = COLORS.Secondary})
+                    button.BackgroundColor3 = COLORS.Primary
+                    button.Indicator.Visible = false
                 end
             end
             
             for _, content in pairs(ContentContainer:GetChildren()) do
-                content.Visible = false
+                if content:IsA("ScrollingFrame") then
+                    content.Visible = false
+                end
             end
             
-            Tween(TabButton, {BackgroundColor3 = COLORS.Accent})
+            TabButton.BackgroundColor3 = COLORS.Secondary
+            TabIndicator.Visible = true
             TabContent.Visible = true
         end)
         
         -- Методы вкладки
+        function Tab:CreateSection(name)
+            local Section = {}
+            local sectionCount = #TabContent:GetChildren()
+            
+            local SectionFrame = Create("Frame", {
+                Name = name .. "Section",
+                Parent = TabContent,
+                BackgroundColor3 = COLORS.Secondary,
+                BorderSizePixel = 0,
+                Position = UDim2.new(0, 0, 0, sectionCount * 45),
+                Size = UDim2.new(1, 0, 0, 40)
+            })
+            
+            Create("UICorner", {
+                Parent = SectionFrame,
+                CornerRadius = UDim.new(0, 6)
+            })
+            
+            local SectionTitle = Create("TextLabel", {
+                Name = "Title",
+                Parent = SectionFrame,
+                BackgroundTransparency = 1,
+                Position = UDim2.new(0, 10, 0, 0),
+                Size = UDim2.new(1, -20, 1, 0),
+                Font = FONT,
+                Text = name,
+                TextColor3 = COLORS.SubText,
+                TextSize = 14,
+                TextXAlignment = Enum.TextXAlignment.Left
+            })
+            
+            return Section
+        end
+        
         function Tab:CreateToggle(config)
+            local toggleCount = #TabContent:GetChildren()
+            
             local ToggleFrame = Create("Frame", {
                 Name = config.Name .. "Toggle",
                 Parent = TabContent,
                 BackgroundColor3 = COLORS.Secondary,
                 BorderSizePixel = 0,
-                Size = UDim2.new(1, -20, 0, 35),
-                Position = UDim2.new(0, 10, 0, #TabContent:GetChildren() * 45)
+                Position = UDim2.new(0, 0, 0, toggleCount * 45),
+                Size = UDim2.new(1, 0, 0, 40)
+            })
+            
+            Create("UICorner", {
+                Parent = ToggleFrame,
+                CornerRadius = UDim.new(0, 6)
             })
             
             local ToggleButton = Create("TextButton", {
@@ -193,18 +307,37 @@ function SwiftxUI.CreateWindow(config)
                 Parent = ToggleFrame,
                 BackgroundColor3 = COLORS.Background,
                 BorderSizePixel = 0,
-                Position = UDim2.new(1, -45, 0.5, -10),
-                Size = UDim2.new(0, 35, 0, 20),
+                Position = UDim2.new(1, -50, 0.5, -10),
+                Size = UDim2.new(0, 40, 0, 20),
                 Text = "",
                 AutoButtonColor = false
+            })
+            
+            Create("UICorner", {
+                Parent = ToggleButton,
+                CornerRadius = UDim.new(0, 10)
+            })
+            
+            local ToggleCircle = Create("Frame", {
+                Name = "Circle",
+                Parent = ToggleButton,
+                BackgroundColor3 = COLORS.Text,
+                Position = UDim2.new(0, 2, 0.5, -8),
+                Size = UDim2.new(0, 16, 0, 16),
+                BorderSizePixel = 0
+            })
+            
+            Create("UICorner", {
+                Parent = ToggleCircle,
+                CornerRadius = UDim.new(1, 0)
             })
             
             local ToggleText = Create("TextLabel", {
                 Name = "Text",
                 Parent = ToggleFrame,
                 BackgroundTransparency = 1,
-                Position = UDim2.new(0, 10, 0, 0),
-                Size = UDim2.new(1, -65, 1, 0),
+                Position = UDim2.new(0, 15, 0, 0),
+                Size = UDim2.new(1, -75, 1, 0),
                 Font = FONT,
                 Text = config.Name,
                 TextColor3 = COLORS.Text,
@@ -215,7 +348,14 @@ function SwiftxUI.CreateWindow(config)
             local Enabled = config.Default or false
             
             local function UpdateToggle()
-                Tween(ToggleButton, {BackgroundColor3 = Enabled and COLORS.Accent or COLORS.Background})
+                if Enabled then
+                    Tween(ToggleButton, {BackgroundColor3 = COLORS.Accent})
+                    Tween(ToggleCircle, {Position = UDim2.new(1, -18, 0.5, -8)})
+                else
+                    Tween(ToggleButton, {BackgroundColor3 = COLORS.Background})
+                    Tween(ToggleCircle, {Position = UDim2.new(0, 2, 0.5, -8)})
+                end
+                
                 if config.Callback then
                     config.Callback(Enabled)
                 end
@@ -229,52 +369,29 @@ function SwiftxUI.CreateWindow(config)
             UpdateToggle()
         end
         
-        function Tab:CreateButton(config)
-            local Button = Create("TextButton", {
-                Name = config.Name .. "Button",
-                Parent = TabContent,
-                BackgroundColor3 = COLORS.Secondary,
-                BorderSizePixel = 0,
-                Size = UDim2.new(1, -20, 0, 35),
-                Position = UDim2.new(0, 10, 0, #TabContent:GetChildren() * 45),
-                Font = FONT,
-                Text = config.Name,
-                TextColor3 = COLORS.Text,
-                TextSize = 14,
-                AutoButtonColor = false
-            })
-            
-            Button.MouseEnter:Connect(function()
-                Tween(Button, {BackgroundColor3 = COLORS.Hover})
-            end)
-            
-            Button.MouseLeave:Connect(function()
-                Tween(Button, {BackgroundColor3 = COLORS.Secondary})
-            end)
-            
-            Button.MouseButton1Click:Connect(function()
-                if config.Callback then
-                    config.Callback()
-                end
-            end)
-        end
-        
         function Tab:CreateSlider(config)
+            local sliderCount = #TabContent:GetChildren()
+            
             local SliderFrame = Create("Frame", {
                 Name = config.Name .. "Slider",
                 Parent = TabContent,
                 BackgroundColor3 = COLORS.Secondary,
                 BorderSizePixel = 0,
-                Size = UDim2.new(1, -20, 0, 50),
-                Position = UDim2.new(0, 10, 0, #TabContent:GetChildren() * 45)
+                Position = UDim2.new(0, 0, 0, sliderCount * 45),
+                Size = UDim2.new(1, 0, 0, 50)
+            })
+            
+            Create("UICorner", {
+                Parent = SliderFrame,
+                CornerRadius = UDim.new(0, 6)
             })
             
             local SliderText = Create("TextLabel", {
                 Name = "Text",
                 Parent = SliderFrame,
                 BackgroundTransparency = 1,
-                Position = UDim2.new(0, 10, 0, 0),
-                Size = UDim2.new(1, -20, 0, 25),
+                Position = UDim2.new(0, 15, 0, 5),
+                Size = UDim2.new(1, -30, 0, 20),
                 Font = FONT,
                 Text = config.Name,
                 TextColor3 = COLORS.Text,
@@ -282,13 +399,31 @@ function SwiftxUI.CreateWindow(config)
                 TextXAlignment = Enum.TextXAlignment.Left
             })
             
+            local SliderValue = Create("TextLabel", {
+                Name = "Value",
+                Parent = SliderFrame,
+                BackgroundTransparency = 1,
+                Position = UDim2.new(1, -50, 0, 5),
+                Size = UDim2.new(0, 40, 0, 20),
+                Font = FONT,
+                Text = "0",
+                TextColor3 = COLORS.SubText,
+                TextSize = 14,
+                TextXAlignment = Enum.TextXAlignment.Right
+            })
+            
             local SliderBar = Create("Frame", {
                 Name = "Bar",
                 Parent = SliderFrame,
                 BackgroundColor3 = COLORS.Background,
                 BorderSizePixel = 0,
-                Position = UDim2.new(0, 10, 0, 30),
-                Size = UDim2.new(1, -20, 0, 5)
+                Position = UDim2.new(0, 15, 0, 35),
+                Size = UDim2.new(1, -30, 0, 4)
+            })
+            
+            Create("UICorner", {
+                Parent = SliderBar,
+                CornerRadius = UDim.new(1, 0)
             })
             
             local SliderFill = Create("Frame", {
@@ -299,6 +434,11 @@ function SwiftxUI.CreateWindow(config)
                 Size = UDim2.new(0, 0, 1, 0)
             })
             
+            Create("UICorner", {
+                Parent = SliderFill,
+                CornerRadius = UDim.new(1, 0)
+            })
+            
             local Min = config.Min or 0
             local Max = config.Max or 100
             local Value = config.Default or Min
@@ -306,7 +446,7 @@ function SwiftxUI.CreateWindow(config)
             local function UpdateSlider()
                 local Percent = (Value - Min) / (Max - Min)
                 Tween(SliderFill, {Size = UDim2.new(Percent, 0, 1, 0)})
-                SliderText.Text = config.Name .. ": " .. Value
+                SliderValue.Text = tostring(Value)
                 if config.Callback then
                     config.Callback(Value)
                 end
@@ -334,10 +474,137 @@ function SwiftxUI.CreateWindow(config)
             UpdateSlider()
         end
         
+        function Tab:CreateDropdown(config)
+            local dropdownCount = #TabContent:GetChildren()
+            
+            local DropdownFrame = Create("Frame", {
+                Name = config.Name .. "Dropdown",
+                Parent = TabContent,
+                BackgroundColor3 = COLORS.Secondary,
+                BorderSizePixel = 0,
+                Position = UDim2.new(0, 0, 0, dropdownCount * 45),
+                Size = UDim2.new(1, 0, 0, 40)
+            })
+            
+            Create("UICorner", {
+                Parent = DropdownFrame,
+                CornerRadius = UDim.new(0, 6)
+            })
+            
+            local DropdownButton = Create("TextButton", {
+                Name = "Button",
+                Parent = DropdownFrame,
+                BackgroundTransparency = 1,
+                Size = UDim2.new(1, 0, 1, 0),
+                Font = FONT,
+                Text = "",
+                TextColor3 = COLORS.Text,
+                TextSize = 14
+            })
+            
+            local DropdownText = Create("TextLabel", {
+                Name = "Text",
+                Parent = DropdownFrame,
+                BackgroundTransparency = 1,
+                Position = UDim2.new(0, 15, 0, 0),
+                Size = UDim2.new(1, -40, 1, 0),
+                Font = FONT,
+                Text = config.Name,
+                TextColor3 = COLORS.Text,
+                TextSize = 14,
+                TextXAlignment = Enum.TextXAlignment.Left
+            })
+            
+            local DropdownArrow = Create("TextLabel", {
+                Name = "Arrow",
+                Parent = DropdownFrame,
+                BackgroundTransparency = 1,
+                Position = UDim2.new(1, -30, 0, 0),
+                Size = UDim2.new(0, 20, 1, 0),
+                Font = FONT,
+                Text = "▼",
+                TextColor3 = COLORS.SubText,
+                TextSize = 14,
+                TextYAlignment = Enum.TextYAlignment.Center
+            })
+            
+            local DropdownList = Create("Frame", {
+                Name = "List",
+                Parent = DropdownFrame,
+                BackgroundColor3 = COLORS.Secondary,
+                BorderSizePixel = 0,
+                Position = UDim2.new(0, 0, 1, 5),
+                Size = UDim2.new(1, 0, 0, 0),
+                ClipsDescendants = true,
+                Visible = false
+            })
+            
+            Create("UICorner", {
+                Parent = DropdownList,
+                CornerRadius = UDim.new(0, 6)
+            })
+            
+            local Options = config.Options or {}
+            local SelectedOption = config.Default or Options[1]
+            local IsOpen = false
+            
+            local function UpdateDropdown()
+                DropdownText.Text = config.Name .. ": " .. tostring(SelectedOption)
+                if config.Callback then
+                    config.Callback(SelectedOption)
+                end
+            end
+            
+            local function ToggleDropdown()
+                IsOpen = not IsOpen
+                DropdownList.Visible = IsOpen
+                if IsOpen then
+                    Tween(DropdownList, {Size = UDim2.new(1, 0, 0, #Options * 30)})
+                    Tween(DropdownArrow, {Rotation = 180})
+                else
+                    Tween(DropdownList, {Size = UDim2.new(1, 0, 0, 0)})
+                    Tween(DropdownArrow, {Rotation = 0})
+                end
+            end
+            
+            DropdownButton.MouseButton1Click:Connect(ToggleDropdown)
+            
+            -- Создаем опции
+            for i, option in ipairs(Options) do
+                local OptionButton = Create("TextButton", {
+                    Name = option,
+                    Parent = DropdownList,
+                    BackgroundTransparency = 1,
+                    Position = UDim2.new(0, 0, 0, (i-1) * 30),
+                    Size = UDim2.new(1, 0, 0, 30),
+                    Font = FONT,
+                    Text = option,
+                    TextColor3 = COLORS.Text,
+                    TextSize = 14
+                })
+                
+                OptionButton.MouseEnter:Connect(function()
+                    Tween(OptionButton, {BackgroundTransparency = 0.9})
+                end)
+                
+                OptionButton.MouseLeave:Connect(function()
+                    Tween(OptionButton, {BackgroundTransparency = 1})
+                end)
+                
+                OptionButton.MouseButton1Click:Connect(function()
+                    SelectedOption = option
+                    UpdateDropdown()
+                    ToggleDropdown()
+                end)
+            end
+            
+            UpdateDropdown()
+        end
+        
         return Tab
     end
     
     return Window
 end
 
-return SwiftxUI
+return SwiftxUI 
