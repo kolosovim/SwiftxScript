@@ -1,37 +1,4 @@
 local SwiftxUI = {}
-local TweenService = game:GetService("TweenService")
-local UserInputService = game:GetService("UserInputService")
-local CoreGui = game:GetService("CoreGui")
-
--- Константы для дизайна в стиле Neverlose
-local COLORS = {
-    Background = Color3.fromRGB(17, 17, 17), -- Темный фон
-    Primary = Color3.fromRGB(23, 23, 23), -- Основной цвет элементов
-    Secondary = Color3.fromRGB(30, 30, 30), -- Вторичный цвет
-    Accent = Color3.fromRGB(0, 144, 255), -- Синий акцент
-    Text = Color3.fromRGB(255, 255, 255), -- Белый текст
-    SubText = Color3.fromRGB(180, 180, 180), -- Серый текст
-    Border = Color3.fromRGB(40, 40, 40), -- Цвет границ
-    Hover = Color3.fromRGB(45, 45, 45) -- Цвет при наведении
-}
-
-local FONT = Enum.Font.Gotham
-local TWEEN_TIME = 0.2
-
--- Утилиты
-local function Create(class, properties)
-    local instance = Instance.new(class)
-    for property, value in pairs(properties) do
-        instance[property] = value
-    end
-    return instance
-end
-
-local function Tween(object, properties, time)
-    local tween = TweenService:Create(object, TweenInfo.new(time or TWEEN_TIME), properties)
-    tween:Play()
-    return tween
-end
 
 -- Создаем основной класс для окна
 local Window = {}
